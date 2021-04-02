@@ -1,5 +1,7 @@
 package com.gimpel.ghsearch.view
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -17,7 +19,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), RepositorySearchResultAdapter.OnItemClickListener {
     private val viewModel by viewModel<MainViewModel>()
     private lateinit var adapter: RepositorySearchResultAdapter
 
@@ -37,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpUI() {
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = RepositorySearchResultAdapter(arrayListOf())
+        adapter = RepositorySearchResultAdapter(arrayListOf(), this)
         recyclerView.addItemDecoration(
             DividerItemDecoration(
                 recyclerView.context,
@@ -45,6 +47,13 @@ class MainActivity : AppCompatActivity() {
             )
         )
         recyclerView.adapter = adapter
+
+        // when changing orientation
+        viewModel.searchResult.value?.data.let {
+            if (!it.isNullOrEmpty()) {
+                refreshList(it)
+            }
+        }
     }
 
     private fun setUpObservers() {
@@ -73,6 +82,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             })
+    }
+
+    override fun onItemClick(url: String) {
+        val i = Intent(Intent.ACTION_VIEW)
+        i.data = Uri.parse(url)
+        startActivity(i)
     }
 
     private fun refreshList(users: List<Repository>) {
